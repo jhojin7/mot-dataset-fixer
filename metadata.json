@@ -1,0 +1,5 @@
+{
+  "name": "MOT Dataset Fixer",
+  "description": "A tool for correcting and merging tracks in Multiple Object Tracking (MOT) datasets, specifically for automotive scenarios focusing on pedestrians. Allows users to visualize tracks across frames and merge broken tracks with keyboard shortcuts.",
+  "requestFramePermissions": []
+}
