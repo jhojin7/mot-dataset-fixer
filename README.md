@@ -1,5 +1,7 @@
 # MOT Dataset Fixer
 
+** Vibe coded with AI. For demonstration purposes. **
+
 A tool for correcting and merging tracks in Multiple Object Tracking (MOT) datasets, specifically designed for automotive scenarios focusing on pedestrians. This interactive application allows users to visualize tracks across frames and merge broken tracks with intuitive keyboard shortcuts.
 
 ## Features
@@ -15,7 +17,10 @@ A tool for correcting and merging tracks in Multiple Object Tracking (MOT) datas
 
 ## Screenshots
 
-![MOT Dataset Fixer Interface](screenshot.png)
+<img src="screenshots/home.png" alt="Home interface" width="400">
+<img src="screenshots/help.png" alt="Help modal" width="400">
+<img src="screenshots/merge.png" alt="Track merging interface" width="400">
+
 *Main interface showing frame visualization, track panel, and controls*
 
 ## Use Cases
@@ -202,3 +207,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built for automotive computer vision research
 - Designed to improve MOT dataset quality
 - Inspired by the need for efficient manual annotation tools
+
+## Limitations
+- Demo dataset is limited in size and complexity
+- May not support all MOT dataset formats
+- Designed for interactive use, not batch processing
