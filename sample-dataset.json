@@ -1,0 +1,99 @@
+{
+  "tracks": [
+    {
+      "id": "T1",
+      "label": "Pedestrian",
+      "color": "#EF4444"
+    },
+    {
+      "id": "T2", 
+      "label": "Cyclist",
+      "color": "#3B82F6"
+    },
+    {
+      "id": "T3",
+      "label": "Vehicle",
+      "color": "#10B981"
+    }
+  ],
+  "detections": [
+    {
+      "id": "T1_F0",
+      "trackId": "T1",
+      "box": {
+        "x": 10,
+        "y": 20,
+        "w": 5,
+        "h": 15
+      },
+      "label": "Pedestrian",
+      "frame": 0
+    },
+    {
+      "id": "T1_F1",
+      "trackId": "T1",
+      "box": {
+        "x": 11.5,
+        "y": 20.5,
+        "w": 5,
+        "h": 15
+      },
+      "label": "Pedestrian",
+      "frame": 1
+    },
+    {
+      "id": "T2_F0",
+      "trackId": "T2",
+      "box": {
+        "x": 50,
+        "y": 30,
+        "w": 8,
+        "h": 12
+      },
+      "label": "Cyclist",
+      "frame": 0
+    },
+    {
+      "id": "T2_F1",
+      "trackId": "T2",
+      "box": {
+        "x": 52,
+        "y": 31,
+        "w": 8,
+        "h": 12
+      },
+      "label": "Cyclist",
+      "frame": 1
+    },
+    {
+      "id": "T3_F5",
+      "trackId": "T3",
+      "box": {
+        "x": 20,
+        "y": 40,
+        "w": 15,
+        "h": 8
+      },
+      "label": "Vehicle",
+      "frame": 5
+    },
+    {
+      "id": "T3_F6",
+      "trackId": "T3",
+      "box": {
+        "x": 22,
+        "y": 40,
+        "w": 15,
+        "h": 8
+      },
+      "label": "Vehicle",
+      "frame": 6
+    }
+  ],
+  "metadata": {
+    "description": "Sample MOT dataset with pedestrians, cyclists, and vehicles",
+    "totalFrames": 30,
+    "createdAt": "2025-06-19T00:00:00.000Z",
+    "version": "1.0"
+  }
+}

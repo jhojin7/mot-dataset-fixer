@@ -45,6 +45,15 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
           </div>
           
           <div>
+            <h3 className="text-lg font-semibold text-brand-accent mb-1">Dataset Management</h3>
+            <ul className="list-disc list-inside space-y-1 pl-2">
+              <li><strong>Load Dataset</strong>: Import existing MOT dataset from JSON file</li>
+              <li><strong>Export Dataset</strong>: Save current state as JSON file</li>
+              <li><strong>Reset</strong>: Return to default sample dataset</li>
+            </ul>
+          </div>
+          
+          <div>
             <h3 className="text-lg font-semibold text-brand-accent mb-1">General</h3>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li><kbd className="px-2 py-1 bg-gray-700 rounded text-sm">H</kbd>: Toggle this Help modal</li>

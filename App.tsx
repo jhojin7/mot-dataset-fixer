@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Track, Detection, UITrack } from './types';
 import { INITIAL_TRACKS, INITIAL_DETECTIONS, MAX_FRAMES, FRAME_WIDTH, FRAME_HEIGHT, TRACK_COLORS } from './constants';
@@ -8,6 +7,37 @@ import Controls from './components/Controls';
 import HelpModal from './components/HelpModal';
 import EditLabelModal from './components/EditLabelModal'; // Import new modal
 
+// Add utility functions for dataset loading
+const validateDataset = (data: any): { tracks: Track[], detections: Detection[] } | null => {
+  try {
+    if (!data || typeof data !== 'object') return null;
+    
+    const tracks = data.tracks || [];
+    const detections = data.detections || [];
+    
+    // Validate tracks structure
+    for (const track of tracks) {
+      if (!track.id || !track.label || !track.color) return null;
+    }
+    
+    // Validate detections structure
+    for (const detection of detections) {
+      if (!detection.id || !detection.trackId || !detection.box || 
+          typeof detection.frame !== 'number' || !detection.label) return null;
+      
+      // Validate bounding box
+      const box = detection.box;
+      if (typeof box.x !== 'number' || typeof box.y !== 'number' || 
+          typeof box.w !== 'number' || typeof box.h !== 'number') return null;
+    }
+    
+    return { tracks, detections };
+  } catch (error) {
+    console.error('Error validating dataset:', error);
+    return null;
+  }
+};
+
 const App: React.FC = () => {
   const [tracks, setTracks] = useState<Track[]>(INITIAL_TRACKS);
   const [detections, setDetections] = useState<Detection[]>(INITIAL_DETECTIONS);
@@ -15,10 +45,9 @@ const App: React.FC = () => {
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
   const [showHelp, setShowHelp] = useState<boolean>(false);
   const [focusedTrackId, setFocusedTrackId] = useState<string | null>(null);
-  
   const [isEditLabelModalOpen, setIsEditLabelModalOpen] = useState<boolean>(false);
   const [trackToEditLabel, setTrackToEditLabel] = useState<Track | null>(null);
-
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const nextTrackNumericIdRef = useRef<number>(
     INITIAL_TRACKS.reduce((maxId, track) => {
@@ -154,6 +183,88 @@ const App: React.FC = () => {
     handleCloseEditLabelModal();
   }, [handleCloseEditLabelModal]);
 
+  // File loading and export functions
+  const handleLoadDataset = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+        const validated = validateDataset(data);
+        
+        if (!validated) {
+          setLoadError('Invalid dataset format. Please check the file structure.');
+          return;
+        }
+
+        // Update the data
+        setTracks(validated.tracks);
+        setDetections(validated.detections);
+        setCurrentFrame(0);
+        setSelectedTrackIds([]);
+        setLoadError(null);
+        
+        // Update the next track ID counter
+        const maxTrackId = validated.tracks.reduce((maxId, track) => {
+          const numericPart = parseInt(track.id.replace('T', ''), 10);
+          return Math.max(maxId, isNaN(numericPart) ? 0 : numericPart);
+        }, 0);
+        nextTrackNumericIdRef.current = maxTrackId + 1;
+        
+        alert('Dataset loaded successfully!');
+      } catch (error) {
+        setLoadError('Error parsing JSON file. Please check the file format.');
+        console.error('Error loading dataset:', error);
+      }
+    };
+    
+    reader.readAsText(file);
+    // Reset the input value so the same file can be loaded again
+    event.target.value = '';
+  }, []);
+
+  const handleExportDataset = useCallback(() => {
+    const dataset = {
+      tracks,
+      detections,
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        totalFrames: MAX_FRAMES,
+        version: '1.0'
+      }
+    };
+
+    const dataStr = JSON.stringify(dataset, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `mot-dataset-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [tracks, detections]);
+
+  const handleResetDataset = useCallback(() => {
+    if (confirm('Are you sure you want to reset to the default dataset? All changes will be lost.')) {
+      setTracks(INITIAL_TRACKS);
+      setDetections(INITIAL_DETECTIONS);
+      setCurrentFrame(0);
+      setSelectedTrackIds([]);
+      setLoadError(null);
+      nextTrackNumericIdRef.current = INITIAL_TRACKS.reduce((maxId, track) => {
+        const numericPart = parseInt(track.id.replace('T', ''), 10);
+        return Math.max(maxId, isNaN(numericPart) ? 0 : numericPart);
+      }, 0) + 1;
+      alert('Dataset reset to default.');
+    }
+  }, []);
+
   const getUniqueLabels = useMemo(() => {
     const allLabels = tracks.map(t => t.label);
     return [...new Set(allLabels)].sort();
@@ -279,16 +390,61 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-brand-dark p-4 md:p-6 space-y-4 overflow-hidden">
-      <header className="flex justify-between items-center">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl md:text-3xl font-bold text-brand-primary">MOT Dataset Fixer</h1>
-        <button 
-            onClick={() => setShowHelp(true)}
-            className="px-4 py-2 bg-brand-secondary text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-            aria-label="Open help dialog"
-        >
-            Help (H)
-        </button>
+        
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Dataset Management Controls */}
+          <div className="flex gap-2 items-center">
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleLoadDataset}
+              style={{ display: 'none' }}
+              id="dataset-file-input"
+            />
+            <label
+              htmlFor="dataset-file-input"
+              className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm cursor-pointer"
+            >
+              Load Dataset
+            </label>
+            <button
+              onClick={handleExportDataset}
+              className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+            >
+              Export Dataset
+            </button>
+            <button
+              onClick={handleResetDataset}
+              className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
+            >
+              Reset
+            </button>
+          </div>
+          
+          <button 
+              onClick={() => setShowHelp(true)}
+              className="px-4 py-2 bg-brand-secondary text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+              aria-label="Open help dialog"
+          >
+              Help (H)
+          </button>
+        </div>
       </header>
+
+      {/* Error Display */}
+      {loadError && (
+        <div className="bg-red-600 text-white p-3 rounded-md flex justify-between items-center">
+          <span>{loadError}</span>
+          <button
+            onClick={() => setLoadError(null)}
+            className="ml-4 text-red-200 hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-1 flex-col md:flex-row gap-4 overflow-hidden">
         <div className="md:w-3/4 flex flex-col bg-gray-800 p-2 rounded-lg shadow-xl">
